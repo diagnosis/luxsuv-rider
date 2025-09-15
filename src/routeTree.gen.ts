@@ -11,7 +11,6 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as BookingIndexRouteImport } from './routes/booking/index'
-import { Route as BookingCreateBookingRouteImport } from './routes/booking/createBooking'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -23,39 +22,30 @@ const BookingIndexRoute = BookingIndexRouteImport.update({
   path: '/booking/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const BookingCreateBookingRoute = BookingCreateBookingRouteImport.update({
-  id: '/booking/createBooking',
-  path: '/booking/createBooking',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/booking/createBooking': typeof BookingCreateBookingRoute
   '/booking': typeof BookingIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/booking/createBooking': typeof BookingCreateBookingRoute
   '/booking': typeof BookingIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/booking/createBooking': typeof BookingCreateBookingRoute
   '/booking/': typeof BookingIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/booking/createBooking' | '/booking'
+  fullPaths: '/' | '/booking'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/booking/createBooking' | '/booking'
-  id: '__root__' | '/' | '/booking/createBooking' | '/booking/'
+  to: '/' | '/booking'
+  id: '__root__' | '/' | '/booking/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  BookingCreateBookingRoute: typeof BookingCreateBookingRoute
   BookingIndexRoute: typeof BookingIndexRoute
 }
 
@@ -75,19 +65,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BookingIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/booking/createBooking': {
-      id: '/booking/createBooking'
-      path: '/booking/createBooking'
-      fullPath: '/booking/createBooking'
-      preLoaderRoute: typeof BookingCreateBookingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  BookingCreateBookingRoute: BookingCreateBookingRoute,
   BookingIndexRoute: BookingIndexRoute,
 }
 export const routeTree = rootRouteImport
