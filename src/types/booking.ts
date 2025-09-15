@@ -37,3 +37,6 @@ export interface BookingDTO {
 }
 
 export type BookingStatus = 'pending' | 'confirmed' | 'assigned' | 'on_trip' | 'completed' | 'canceled'
+
+// Dummy export to ensure module is not empty after type stripping
+export const __esModule = true;
