@@ -49,7 +49,6 @@ function RouteComponent() {
             </button>
           </div>
         </div>
-}
 
         {/* Tab Content */}
         <div className="bg-white rounded-lg shadow-sm">
