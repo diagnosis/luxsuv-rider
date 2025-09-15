@@ -1,4 +1,4 @@
-import { BookingGuestReq, BookingGuestRes, BookingDTO, BookingStatus } from '../types/booking'
+import type { BookingGuestReq, BookingGuestRes, BookingDTO, BookingStatus } from '../types/booking'
 
 const API_BASE = 'http://localhost:8080/v1/bookings/guest'
 

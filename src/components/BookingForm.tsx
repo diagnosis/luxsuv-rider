@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { createBooking } from '../api/bookings'
-import { BookingGuestReq } from '../types/booking'
+import type { BookingGuestReq } from '../types/booking'
 
 export function BookingForm() {
   const [formData, setFormData] = useState<BookingGuestReq>({

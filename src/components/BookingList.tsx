@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { listBookings } from '../api/bookings'
-import { BookingStatus } from '../types/booking'
+import type { BookingStatus } from '../types/booking'
 
 export function BookingList() {
   const [filters, setFilters] = useState({

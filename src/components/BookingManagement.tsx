@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { getBookingById, cancelBooking } from '../api/bookings'
-import { BookingDTO } from '../types/booking'
+import type { BookingDTO } from '../types/booking'
 
 export function BookingManagement() {
   const [bookingId, setBookingId] = useState('')
