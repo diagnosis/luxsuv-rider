@@ -19,29 +19,48 @@ export function VerifyEmail() {
       return
     }
 
+    let isCancelled = false
+
     const verifyEmail = async () => {
       try {
-        // Use POST with token in query params - matches your Go backend
+        console.log('Calling verify-email with token:', token)
+        
+        // Call the correct endpoint that matches your Go backend
         const response = await apiClient.post(`/v1/auth/verify-email?token=${encodeURIComponent(token)}`)
+        
+        if (isCancelled) return
+        
         setStatus('success')
         setMessage(response.data?.message || 'Email verified successfully!')
         showToast('Email verified successfully!', 'success')
         
-        // Redirect to login after 2 seconds
+        // Redirect after success
         setTimeout(() => {
-          navigate('/login', { replace: true })
+          if (!isCancelled) {
+            navigate('/login', { replace: true })
+          }
         }, 2000)
+        
       } catch (error: any) {
+        if (isCancelled) return
+        
+        console.error('Verification error:', error)
         setStatus('error')
-        const errorMessage = error.response?.data?.message || error.message || 'Verification failed'
+        
+        const errorMessage = error.response?.data?.message || 
+                           error.message || 
+                           'Verification failed'
         setMessage(errorMessage)
         showToast(errorMessage, 'error')
       }
     }
 
-    // Only run once
     verifyEmail()
-  }, [token])
+
+    return () => {
+      isCancelled = true
+    }
+  }, [token, navigate, showToast])
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
