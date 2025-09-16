@@ -108,8 +108,6 @@ function BookingCard({ booking, onClick }: BookingCardProps) {
               Details unavailable
             </span>
           )}
-        </div>
-      </div>
 
       <div className="flex justify-between items-center text-sm text-gray-600">
         <div className="flex space-x-4">
