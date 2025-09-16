@@ -30,8 +30,20 @@ apiClient.interceptors.response.use(
 
 // Simple request interceptor - no loops
 apiClient.interceptors.request.use((config) => {
+  // Check if this is a manage_token request (either in params or URL)
+  const hasManageTokenInUrl = config.url?.includes('manage_token') || false
+  const hasManageTokenInParams = config.params?.manage_token || false
+  const isManageTokenRequest = hasManageTokenInUrl || hasManageTokenInParams
+  
+  console.log('API: Request interceptor check:', {
+    url: config.url,
+    hasManageTokenInUrl,
+    hasManageTokenInParams,
+    isManageTokenRequest
+  })
+  
   // Don't add auth for manage_token requests
-  if (config.params?.manage_token) {
+  if (isManageTokenRequest) {
     console.log('API: Using manage_token, skipping auth header')
     return config
   }
@@ -39,10 +51,15 @@ apiClient.interceptors.request.use((config) => {
   // Get auth from localStorage directly to avoid store issues
   try {
     const authData = localStorage.getItem('auth-storage')
-    console.log('API: Auth data from localStorage:', authData ? 'found' : 'not found')
+    console.log('API: Auth data from localStorage:', authData ? 'found' : 'not found', authData?.substring(0, 100))
     if (authData) {
       const { state } = JSON.parse(authData)
-      console.log('API: Parsed auth state:', { hasJwt: !!state.jwt, hasGuestToken: !!state.guestSessionToken })
+      console.log('API: Parsed auth state:', { 
+        hasJwt: !!state.jwt, 
+        hasGuestToken: !!state.guestSessionToken,
+        jwtPreview: state.jwt?.substring(0, 20) + '...',
+        guestTokenPreview: state.guestSessionToken?.substring(0, 20) + '...'
+      })
       
       if (state.jwt) {
         config.headers.Authorization = `Bearer ${state.jwt}`
@@ -50,13 +67,20 @@ apiClient.interceptors.request.use((config) => {
       } else if (state.guestSessionToken) {
         config.headers.Authorization = `Bearer ${state.guestSessionToken}`
         console.log('API: Added guest auth header')
+      } else {
+        console.log('API: No auth tokens found in state')
       }
+    } else {
+      console.log('API: No auth data in localStorage')
     }
   } catch (e) {
     console.error('API: Error reading auth from localStorage:', e)
   }
   
-  console.log('API: Final request headers:', config.headers)
+  console.log('API: Final request headers:', {
+    Authorization: config.headers.Authorization ? 'Bearer ' + config.headers.Authorization.substring(7, 27) + '...' : 'missing',
+    'Content-Type': config.headers['Content-Type']
+  })
   return config
 })
 
