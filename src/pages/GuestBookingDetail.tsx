@@ -34,7 +34,7 @@ function GuestBookingDetailContent() {
     
     setIsLoading(true)
     try {
-      let url = `/v1/bookings/guest/${id}`
+      let url = `/v1/guest/bookings/${id}`
       if (isUsingManageToken) {
         url += `?manage_token=${encodeURIComponent(manageToken!)}`
       }

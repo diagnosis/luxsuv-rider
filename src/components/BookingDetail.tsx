@@ -92,7 +92,7 @@ export function BookingDetail({ booking, canEdit, canCancel, onUpdate, onCancel 
       }
 
       const url = booking.manage_token
-        ? `/v1/bookings/guest/${booking.id}?manage_token=${booking.manage_token}`
+        ? `/v1/guest/bookings/${booking.id}?manage_token=${booking.manage_token}`
         : `/v1/guest/bookings/${booking.id}`
 
       await apiClient.patch(url, changes)
@@ -125,7 +125,7 @@ export function BookingDetail({ booking, canEdit, canCancel, onUpdate, onCancel 
     setIsSubmitting(true)
     try {
       const url = booking.manage_token
-        ? `/v1/bookings/guest/${booking.id}?manage_token=${booking.manage_token}`
+        ? `/v1/guest/bookings/${booking.id}?manage_token=${booking.manage_token}`
         : `/v1/guest/bookings/${booking.id}`
 
       await apiClient.delete(url)

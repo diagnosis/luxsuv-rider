@@ -9,11 +9,11 @@ export async function createGuestBooking(data: BookingGuestReq): Promise<Booking
 }
 
 export async function getGuestBookingById(id: number, manageToken: string): Promise<BookingDTO> {
-  return apiRequest<BookingDTO>(`/v1/bookings/guest/${id}?manage_token=${encodeURIComponent(manageToken)}`)
+  return apiRequest<BookingDTO>(`/v1/guest/bookings/${id}?manage_token=${encodeURIComponent(manageToken)}`)
 }
 
 export async function cancelGuestBooking(id: number, manageToken: string): Promise<void> {
-  return apiRequest<void>(`/v1/bookings/guest/${id}?manage_token=${encodeURIComponent(manageToken)}`, {
+  return apiRequest<void>(`/v1/guest/bookings/${id}?manage_token=${encodeURIComponent(manageToken)}`, {
     method: 'DELETE',
   })
 }
