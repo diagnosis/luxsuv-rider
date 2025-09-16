@@ -2,7 +2,7 @@ import { apiRequest } from './client'
 import type { BookingGuestReq, BookingGuestRes, BookingDTO, BookingStatus } from '../types/booking'
 
 export async function createGuestBooking(data: BookingGuestReq): Promise<BookingGuestRes> {
-  return apiRequest<BookingGuestRes>('/v1/bookings/guest', {
+  return apiRequest<BookingGuestRes>('/v1/guest/bookings', {
     method: 'POST',
     body: JSON.stringify(data),
   })

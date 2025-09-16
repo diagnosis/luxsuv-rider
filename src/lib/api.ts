@@ -13,17 +13,17 @@ export const apiClient = axios.create({
 
 // Debug logging for all requests
 apiClient.interceptors.request.use((config) => {
-  console.log('API Request:', config.method?.toUpperCase(), config.url)
+  console.log('API Request:', config.method?.toUpperCase(), config.baseURL + config.url)
   return config
 })
 
 apiClient.interceptors.response.use(
   (response) => {
-    console.log('API Response:', response.status, response.config.url)
+    console.log('API Response:', response.status, response.config.url, 'Data:', response.data)
     return response
   },
   (error) => {
-    console.error('API Error:', error.response?.status, error.config?.url)
+    console.error('API Error:', error.response?.status, error.config?.url, 'Message:', error.response?.data)
     return Promise.reject(error)
   }
 )

@@ -36,7 +36,8 @@ export function BookingForm({ isGuest, onSuccess }: BookingFormProps) {
       const scheduledAt = new Date(data.scheduled_at).toISOString()
       const payload = { ...data, scheduled_at: scheduledAt }
 
-      const endpoint = isGuest ? '/v1/bookings/guest' : '/v1/rider/bookings'
+      const endpoint = isGuest ? '/v1/guest/bookings' : '/v1/rider/bookings'
+      console.log('BookingForm: Making request to:', endpoint, 'with payload:', payload)
       const response = await apiClient.post(endpoint, payload)
       
       showToast('Booking created successfully!', 'success')
