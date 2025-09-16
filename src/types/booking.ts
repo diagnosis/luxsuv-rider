@@ -11,9 +11,25 @@ export interface BookingGuestReq {
   notes?: string
 }
 
+export interface BookingRiderReq {
+  pickup: string
+  dropoff: string
+  scheduled_at: string // ISO string
+  passengers: number
+  luggages: number
+  ride_type: 'per_ride' | 'hourly'
+  notes?: string
+}
+
 export interface BookingGuestRes {
   id: number
   manage_token: string
+  status: string
+  scheduled_at: string
+}
+
+export interface BookingRiderRes {
+  id: number
   status: string
   scheduled_at: string
 }

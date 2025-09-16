@@ -22,7 +22,7 @@ function RouteComponent() {
           </p>
           <div className="flex gap-4 justify-center">
             <Link 
-              to="/guest/book" 
+              to="/book" 
               className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold transition-colors"
             >
               Book Now
