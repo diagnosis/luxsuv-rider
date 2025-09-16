@@ -32,6 +32,7 @@ function GuestBookingDetailContent() {
   const loadBooking = async () => {
     if (!id) return
     
+    console.log('GuestBookingDetail: Loading booking', { id, manageToken, hasGuestToken: !!guestSessionToken })
     setIsLoading(true)
     try {
       let url = `/v1/guest/bookings/${id}`
@@ -39,6 +40,7 @@ function GuestBookingDetailContent() {
         url += `?manage_token=${encodeURIComponent(manageToken!)}`
       }
       
+      console.log('GuestBookingDetail: Making request to:', url, 'isUsingManageToken:', isUsingManageToken)
       const response = await apiClient.get<Booking>(url)
       setBooking({ ...response.data, manage_token: manageToken || undefined })
     } catch (error: any) {

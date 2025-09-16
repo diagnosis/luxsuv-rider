@@ -32,25 +32,31 @@ apiClient.interceptors.response.use(
 apiClient.interceptors.request.use((config) => {
   // Don't add auth for manage_token requests
   if (config.params?.manage_token) {
+    console.log('API: Using manage_token, skipping auth header')
     return config
   }
   
   // Get auth from localStorage directly to avoid store issues
   try {
     const authData = localStorage.getItem('auth-storage')
+    console.log('API: Auth data from localStorage:', authData ? 'found' : 'not found')
     if (authData) {
       const { state } = JSON.parse(authData)
+      console.log('API: Parsed auth state:', { hasJwt: !!state.jwt, hasGuestToken: !!state.guestSessionToken })
       
       if (state.jwt) {
         config.headers.Authorization = `Bearer ${state.jwt}`
+        console.log('API: Added rider auth header')
       } else if (state.guestSessionToken) {
         config.headers.Authorization = `Bearer ${state.guestSessionToken}`
+        console.log('API: Added guest auth header')
       }
     }
   } catch (e) {
-    // Ignore localStorage errors
+    console.error('API: Error reading auth from localStorage:', e)
   }
   
+  console.log('API: Final request headers:', config.headers)
   return config
 })
 
