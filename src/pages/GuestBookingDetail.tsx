@@ -36,19 +36,19 @@ function GuestBookingDetailContent() {
     try {
       console.log('GuestBookingDetail: Loading booking', { 
         id, 
-        manageToken, 
-        hasGuestToken: !!guestSessionToken,
-        approach: isUsingManageToken ? 'manage_token' : 'session_auth'
+        hasManageToken: !!manageToken,
+        hasSessionToken: !!guestSessionToken,
+        authMethod: manageToken ? 'manage_token' : 'session_auth'
       })
       
       let url = `/v1/guest/bookings/${id}`
-      if (isUsingManageToken) {
+      if (manageToken) {
         url += `?manage_token=${encodeURIComponent(manageToken!)}`
       }
       
       console.log('GuestBookingDetail: Making request to:', url)
       const response = await apiClient.get<Booking>(url)
-      console.log('GuestBookingDetail: Success! Booking loaded:', response.data)
+      console.log('GuestBookingDetail: Success! Booking loaded')
       setBooking({ ...response.data, manage_token: manageToken || undefined })
     } catch (error: any) {
       const status = error.response?.status
@@ -56,16 +56,17 @@ function GuestBookingDetailContent() {
       console.error('GuestBookingDetail: Error loading booking:', { status, message, error })
       
       if (status === 401) {
-        if (isUsingManageToken) {
-          showToast('Invalid management token', 'error')
+        if (manageToken) {
+          showToast('Invalid or expired management link', 'error')
           navigate('/')
         } else {
-          showToast('Cannot access individual booking. Your session may have expired or this booking requires a management link.', 'error')
-          navigate('/guest/bookings')
+          showToast('Your session has expired. Please verify your email again.', 'error')
+          clearGuestAuth()
+          navigate('/guest/access')
         }
       } else if (status === 404) {
         showToast('Booking not found', 'error')
-        navigate(isUsingManageToken ? '/' : '/guest/bookings')
+        navigate(manageToken ? '/' : '/guest/bookings')
       } else {
         showToast(`Failed to load booking: ${message}`, 'error')
       }
@@ -75,11 +76,17 @@ function GuestBookingDetailContent() {
   }
 
   useEffect(() => {
-    loadBooking()
-  }, [id, manageToken])
+    // Only load if we have either manage token OR session token
+    if (manageToken || guestSessionToken) {
+      loadBooking()
+    } else {
+      console.log('GuestBookingDetail: No auth available, redirecting to access')
+      navigate('/guest/access')
+    }
+  }, [id, manageToken, guestSessionToken])
 
   const handleCancel = () => {
-    if (isUsingManageToken) {
+    if (manageToken) {
       navigate('/')
     } else {
       navigate('/guest/bookings')
@@ -123,7 +130,7 @@ function GuestBookingDetailContent() {
           <div className="flex justify-between items-center py-6">
             <div className="flex items-center space-x-4">
               <h1 className="text-2xl font-bold text-gray-900">LuxRide</h1>
-              {isUsingManageToken && (
+              {manageToken && (
                 <span className="text-sm text-gray-600 bg-yellow-100 px-2 py-1 rounded">
                   Guest Access
                 </span>
@@ -137,7 +144,7 @@ function GuestBookingDetailContent() {
                 New Booking
               </button>
               
-              {!isUsingManageToken && (
+              {!manageToken && (
                 <>
                   <button
                     onClick={() => navigate('/guest/bookings')}
@@ -166,7 +173,7 @@ function GuestBookingDetailContent() {
         <div className="flex items-center mb-8">
           <button
             onClick={() => {
-              if (isUsingManageToken) {
+              if (manageToken) {
                 navigate('/')
               } else {
                 navigate('/guest/bookings')
@@ -179,7 +186,7 @@ function GuestBookingDetailContent() {
           <h2 className="text-3xl font-bold text-gray-900">Booking Details</h2>
         </div>
         
-        {isUsingManageToken && (
+        {manageToken && (
           <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
             <p className="text-sm text-blue-800">
               <strong>Guest Management Access:</strong> You can view and edit this booking using your management link.{' '}

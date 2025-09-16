@@ -46,8 +46,6 @@ interface BookingCardProps {
 }
 
 function BookingCard({ booking, onClick }: BookingCardProps) {
-  console.log('BookingCard: Rendering booking with manage_token:', !!booking.manage_token)
-  
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
       case 'pending':
@@ -111,15 +109,9 @@ function BookingCard({ booking, onClick }: BookingCardProps) {
           <span>{booking.luggages} luggage</span>
           <span className="capitalize">{booking.ride_type.replace('_', ' ')}</span>
         </div>
-          {booking.manage_token ? (
-            <span className="text-blue-600 hover:text-blue-800">
-              View details →
-            </span>
-          ) : (
-            <span className="text-gray-400">
-              Details unavailable
-            </span>
-          )}
+        <span className="text-blue-600 hover:text-blue-800">
+          View details →
+        </span>
         </div>
       </div>
   )
