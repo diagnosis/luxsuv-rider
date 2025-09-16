@@ -1,5 +1,4 @@
 import axios from 'axios'
-import { useAuthStore } from '../store/auth'
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8080'
 
@@ -7,20 +6,30 @@ export const apiClient = axios.create({
   baseURL: API_BASE,
 })
 
+// Simple flag to prevent interceptor loops
+let isRefreshing = false
+
 // Request interceptor to add auth headers
 apiClient.interceptors.request.use(
   (config) => {
-    const { jwt, guestSessionToken } = useAuthStore.getState()
-    
     // Don't add auth header if using manage_token in query params
     if (config.params?.manage_token) {
       return config
     }
     
-    if (jwt) {
-      config.headers.Authorization = `Bearer ${jwt}`
-    } else if (guestSessionToken) {
-      config.headers.Authorization = `Bearer ${guestSessionToken}`
+    // Get auth state directly from localStorage to avoid store dependencies
+    const authData = localStorage.getItem('auth-storage')
+    if (authData) {
+      try {
+        const { state } = JSON.parse(authData)
+        if (state.jwt) {
+          config.headers.Authorization = `Bearer ${state.jwt}`
+        } else if (state.guestSessionToken) {
+          config.headers.Authorization = `Bearer ${state.guestSessionToken}`
+        }
+      } catch (e) {
+        // Ignore JSON parse errors
+      }
     }
     
     return config
@@ -32,18 +41,27 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      // Clear auth on 401, but avoid infinite loops
-      const { jwt, guestSessionToken, clearAll } = useAuthStore.getState()
-      if (jwt || guestSessionToken) {
-        clearAll()
-        // Only redirect if we're not already on auth pages
-        const currentPath = window.location.pathname
-        if (!currentPath.includes('/login') && !currentPath.includes('/verify-email') && !currentPath.includes('/guest/access')) {
+    // Only handle 401 errors and avoid loops
+    if (error.response?.status === 401 && !isRefreshing) {
+      isRefreshing = true
+      
+      // Clear auth state
+      localStorage.removeItem('auth-storage')
+      
+      // Only redirect if not already on auth/landing pages
+      const currentPath = window.location.pathname
+      const authPages = ['/login', '/verify-email', '/guest/access', '/']
+      
+      if (!authPages.includes(currentPath) && !currentPath.includes('manage_token')) {
+        setTimeout(() => {
           window.location.href = '/'
-        }
+          isRefreshing = false
+        }, 100)
+      } else {
+        isRefreshing = false
       }
     }
+    
     return Promise.reject(error)
   }
 )

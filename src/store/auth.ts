@@ -43,8 +43,19 @@ export const useAuthStore = create<AuthStore>()(
     }),
     {
       name: 'auth-storage',
-      // Add version for storage migration if needed
       version: 1,
+      migrate: (persistedState: any, version: number) => {
+        if (version === 0) {
+          // Clear old state if version mismatch
+          return {
+            jwt: null,
+            user: null,
+            guestSessionToken: null,
+            guestEmail: null,
+          }
+        }
+        return persistedState
+      },
     }
   )
 )

@@ -24,26 +24,35 @@ export function RouteGuard({
   const manageToken = searchParams.get('manage_token')
 
   useEffect(() => {
+    let shouldRedirect = false
+    let redirectPath = '/'
+
     if (requiresRiderAuth && !jwt) {
-      navigate('/login', { replace: true })
-      return
+      shouldRedirect = true
+      redirectPath = '/login'
     }
 
     if (requiresGuestAuth && !guestSessionToken && !(allowManageToken && manageToken)) {
-      navigate('/guest/access', { replace: true })
-      return
+      shouldRedirect = true
+      redirectPath = '/guest/access'
+    }
+
+    if (shouldRedirect) {
+      // Use timeout to prevent immediate redirect loops
+      const timer = setTimeout(() => {
+        navigate(redirectPath, { replace: true })
+      }, 50)
+      return () => clearTimeout(timer)
     }
   }, [jwt, guestSessionToken, manageToken, requiresRiderAuth, requiresGuestAuth, allowManageToken, navigate])
 
-  // Don't show loading screen, just let the useEffect handle redirects
-
-  // Quick auth checks without loading screens
+  // Simple access checks
   if (requiresRiderAuth && !jwt) {
-    return null // Let useEffect redirect
+    return null
   }
 
   if (requiresGuestAuth && !guestSessionToken && !(allowManageToken && manageToken)) {
-    return null // Let useEffect redirect
+    return null
   }
 
   return <>{children}</>

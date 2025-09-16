@@ -21,15 +21,16 @@ export function VerifyEmail() {
 
     const verifyEmail = async () => {
       try {
+        // Use POST with token in query params - matches your Go backend
         const response = await apiClient.post(`/v1/auth/verify-email?token=${encodeURIComponent(token)}`)
         setStatus('success')
         setMessage(response.data?.message || 'Email verified successfully!')
         showToast('Email verified successfully!', 'success')
         
-        // Redirect to login after 3 seconds
+        // Redirect to login after 2 seconds
         setTimeout(() => {
-          navigate('/login')
-        }, 3000)
+          navigate('/login', { replace: true })
+        }, 2000)
       } catch (error: any) {
         setStatus('error')
         const errorMessage = error.response?.data?.message || error.message || 'Verification failed'
@@ -38,8 +39,9 @@ export function VerifyEmail() {
       }
     }
 
+    // Only run once
     verifyEmail()
-  }, [token, navigate, showToast])
+  }, [token])
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -60,7 +62,7 @@ export function VerifyEmail() {
               <p className="text-gray-600 mb-4">{message}</p>
               <p className="text-sm text-gray-500">Redirecting to login page...</p>
               <button
-                onClick={() => navigate('/login')}
+                onClick={() => navigate('/login', { replace: true })}
                 className="mt-4 text-blue-600 hover:text-blue-800 underline"
               >
                 Go to login now
@@ -74,7 +76,7 @@ export function VerifyEmail() {
               <h2 className="text-xl font-semibold text-gray-900 mb-2">Verification Failed</h2>
               <p className="text-gray-600 mb-4">{message}</p>
               <button
-                onClick={() => navigate('/')}
+                onClick={() => navigate('/', { replace: true })}
                 className="text-blue-600 hover:text-blue-800 underline"
               >
                 Back to home
