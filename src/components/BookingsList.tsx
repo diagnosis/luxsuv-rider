@@ -122,6 +122,5 @@ function BookingCard({ booking, onClick }: BookingCardProps) {
           )}
         </div>
       </div>
-    </div>
   )
 }
