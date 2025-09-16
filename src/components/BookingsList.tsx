@@ -111,7 +111,6 @@ function BookingCard({ booking, onClick }: BookingCardProps) {
           <span>{booking.luggages} luggage</span>
           <span className="capitalize">{booking.ride_type.replace('_', ' ')}</span>
         </div>
-        <div>
           {booking.manage_token ? (
             <span className="text-blue-600 hover:text-blue-800">
               View details →
