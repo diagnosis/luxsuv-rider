@@ -35,7 +35,7 @@ function GuestBookingsContent() {
       if (status === 401) {
         showToast('Session expired. Please verify your email again.', 'error')
         clearGuestAuth()
-        navigate('/guest/access')
+        navigate('/guest/access', { replace: true })
       } else {
         showToast(message || 'Failed to load bookings', 'error')
       }

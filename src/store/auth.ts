@@ -43,6 +43,8 @@ export const useAuthStore = create<AuthStore>()(
     }),
     {
       name: 'auth-storage',
+      // Add version for storage migration if needed
+      version: 1,
     }
   )
 )

@@ -39,7 +39,7 @@ function RiderBookingsContent() {
       if (status === 401) {
         showToast('Session expired. Please log in again.', 'error')
         clearRiderAuth()
-        navigate('/')
+        navigate('/login')
       } else {
         showToast(message || 'Failed to load bookings', 'error')
       }

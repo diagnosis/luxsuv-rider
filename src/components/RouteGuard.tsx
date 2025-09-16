@@ -25,7 +25,7 @@ export function RouteGuard({
 
   useEffect(() => {
     if (requiresRiderAuth && !jwt) {
-      navigate('/', { replace: true })
+      navigate('/login', { replace: true })
       return
     }
 
@@ -35,23 +35,15 @@ export function RouteGuard({
     }
   }, [jwt, guestSessionToken, manageToken, requiresRiderAuth, requiresGuestAuth, allowManageToken, navigate])
 
-  // Show loading while checking auth
+  // Don't show loading screen, just let the useEffect handle redirects
+
+  // Quick auth checks without loading screens
   if (requiresRiderAuth && !jwt) {
-    return <div className="min-h-screen flex items-center justify-center">
-      <div className="text-center">
-        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        <p className="mt-4 text-gray-600">Checking authentication...</p>
-      </div>
-    </div>
+    return null // Let useEffect redirect
   }
 
   if (requiresGuestAuth && !guestSessionToken && !(allowManageToken && manageToken)) {
-    return <div className="min-h-screen flex items-center justify-center">
-      <div className="text-center">
-        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        <p className="mt-4 text-gray-600">Checking access...</p>
-      </div>
-    </div>
+    return null // Let useEffect redirect
   }
 
   return <>{children}</>

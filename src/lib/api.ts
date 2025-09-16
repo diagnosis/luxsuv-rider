@@ -33,9 +33,16 @@ apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Clear auth on 401
-      const { clearAll } = useAuthStore.getState()
-      clearAll()
+      // Clear auth on 401, but avoid infinite loops
+      const { jwt, guestSessionToken, clearAll } = useAuthStore.getState()
+      if (jwt || guestSessionToken) {
+        clearAll()
+        // Only redirect if we're not already on auth pages
+        const currentPath = window.location.pathname
+        if (!currentPath.includes('/login') && !currentPath.includes('/verify-email') && !currentPath.includes('/guest/access')) {
+          window.location.href = '/'
+        }
+      }
     }
     return Promise.reject(error)
   }
