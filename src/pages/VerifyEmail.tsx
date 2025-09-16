@@ -19,14 +19,16 @@ export function VerifyEmail() {
       return
     }
 
+    console.log('VerifyEmail: Starting verification with token:', token)
     let isCancelled = false
 
     const verifyEmail = async () => {
       try {
-        console.log('Calling verify-email with token:', token)
+        const endpoint = `/v1/auth/verify-email?token=${encodeURIComponent(token)}`
+        console.log('VerifyEmail: Making request to:', endpoint)
         
-        // Call the correct endpoint that matches your Go backend
-        const response = await apiClient.post(`/v1/auth/verify-email?token=${encodeURIComponent(token)}`)
+        const response = await apiClient.post(endpoint)
+        console.log('VerifyEmail: Response received:', response.status)
         
         if (isCancelled) return
         
@@ -37,6 +39,7 @@ export function VerifyEmail() {
         // Redirect after success
         setTimeout(() => {
           if (!isCancelled) {
+            console.log('VerifyEmail: Redirecting to login')
             navigate('/login', { replace: true })
           }
         }, 2000)
@@ -44,7 +47,8 @@ export function VerifyEmail() {
       } catch (error: any) {
         if (isCancelled) return
         
-        console.error('Verification error:', error)
+        console.error('VerifyEmail: Verification error:', error)
+        console.error('VerifyEmail: Error response:', error.response)
         setStatus('error')
         
         const errorMessage = error.response?.data?.message || 

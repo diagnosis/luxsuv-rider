@@ -6,7 +6,27 @@ const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8080'
 export const apiClient = axios.create({
   baseURL: API_BASE,
   timeout: 10000,
+  headers: {
+    'Content-Type': 'application/json',
+  },
 })
+
+// Debug logging for all requests
+apiClient.interceptors.request.use((config) => {
+  console.log('API Request:', config.method?.toUpperCase(), config.url)
+  return config
+})
+
+apiClient.interceptors.response.use(
+  (response) => {
+    console.log('API Response:', response.status, response.config.url)
+    return response
+  },
+  (error) => {
+    console.error('API Error:', error.response?.status, error.config?.url)
+    return Promise.reject(error)
+  }
+)
 
 // Simple request interceptor - no loops
 apiClient.interceptors.request.use((config) => {
