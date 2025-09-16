@@ -23,7 +23,7 @@ export function Login() {
   const onSubmit = async (data: LoginData) => {
     try {
       const response = await apiClient.post<LoginResponse>('/v1/auth/login', data)
-      setRiderAuth(response.data.token, response.data.user)
+      setRiderAuth(response.data.access_token, response.data.user)
       showToast('Welcome back!', 'success')
       navigate('/bookings')
     } catch (error: any) {

@@ -21,7 +21,7 @@ export function VerifyEmail() {
 
     const verifyEmail = async () => {
       try {
-        const response = await apiClient.post(`/v1/auth/verify?token=${encodeURIComponent(token)}`)
+        const response = await apiClient.post(`/v1/auth/verify-email?token=${encodeURIComponent(token)}`)
         setStatus('success')
         setMessage(response.data?.message || 'Email verified successfully!')
         showToast('Email verified successfully!', 'success')
