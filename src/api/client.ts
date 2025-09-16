@@ -1,18 +1,18 @@
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8080'
 
-interface ApiResponse<T = unknown> {
-  data?: T
-  error?: string
-}
-
 export class ApiError extends Error {
+  public status: number
+  public response?: Response
+
   constructor(
     message: string,
-    public status: number,
-    public response?: Response
+    status: number,
+    response?: Response
   ) {
     super(message)
     this.name = 'ApiError'
+    this.status = status
+    this.response = response
   }
 }
 

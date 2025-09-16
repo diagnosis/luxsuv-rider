@@ -10,9 +10,6 @@ import type { LoginResponse } from '../lib/api-types'
 
 export function AuthTabs() {
   const [activeTab, setActiveTab] = useState<'signin' | 'signup'>('signin')
-  const navigate = useNavigate()
-  const { setRiderAuth } = useAuthStore()
-  const { showToast } = useToast()
 
   return (
     <div className="w-full max-w-md mx-auto">
