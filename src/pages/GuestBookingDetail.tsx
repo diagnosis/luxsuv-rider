@@ -38,10 +38,13 @@ function GuestBookingDetailContent() {
       let url = `/v1/guest/bookings/${id}`
       if (isUsingManageToken) {
         url += `?manage_token=${encodeURIComponent(manageToken!)}`
+      } else {
+        console.log('GuestBookingDetail: No manage token available, trying with session auth only')
       }
       
       console.log('GuestBookingDetail: Making request to:', url, 'isUsingManageToken:', isUsingManageToken)
       const response = await apiClient.get<Booking>(url)
+      console.log('GuestBookingDetail: Success! Booking loaded:', response.data)
       setBooking({ ...response.data, manage_token: manageToken || undefined })
     } catch (error: any) {
       const status = error.response?.status

@@ -28,6 +28,11 @@ function GuestBookingsContent() {
     try {
       const response = await apiClient.get<Booking[]>('/v1/guest/bookings')
       setBookings(response.data)
+      console.log('GuestBookings: Loaded bookings with fields:', response.data.map(b => ({
+        id: b.id,
+        hasManageToken: !!b.manage_token,
+        manageToken: b.manage_token ? b.manage_token.substring(0, 8) + '...' : 'missing'
+      })))
     } catch (error: any) {
       const status = error.response?.status
       const message = error.response?.data?.message || error.message
