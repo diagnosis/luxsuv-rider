@@ -32,38 +32,42 @@ function GuestBookingDetailContent() {
   const loadBooking = async () => {
     if (!id) return
     
-    console.log('GuestBookingDetail: Loading booking', { id, manageToken, hasGuestToken: !!guestSessionToken })
     setIsLoading(true)
     try {
+      console.log('GuestBookingDetail: Loading booking', { 
+        id, 
+        manageToken, 
+        hasGuestToken: !!guestSessionToken,
+        approach: isUsingManageToken ? 'manage_token' : 'session_auth'
+      })
+      
       let url = `/v1/guest/bookings/${id}`
       if (isUsingManageToken) {
         url += `?manage_token=${encodeURIComponent(manageToken!)}`
-      } else {
-        console.log('GuestBookingDetail: No manage token available, trying with session auth only')
       }
       
-      console.log('GuestBookingDetail: Making request to:', url, 'isUsingManageToken:', isUsingManageToken)
+      console.log('GuestBookingDetail: Making request to:', url)
       const response = await apiClient.get<Booking>(url)
       console.log('GuestBookingDetail: Success! Booking loaded:', response.data)
       setBooking({ ...response.data, manage_token: manageToken || undefined })
     } catch (error: any) {
       const status = error.response?.status
       const message = error.response?.data?.message || error.message
+      console.error('GuestBookingDetail: Error loading booking:', { status, message, error })
       
       if (status === 401) {
         if (isUsingManageToken) {
           showToast('Invalid management token', 'error')
           navigate('/')
         } else {
-          showToast('Session expired. Please verify your email again.', 'error')
-          clearGuestAuth()
-          navigate('/guest/access')
+          showToast('Cannot access individual booking. Your session may have expired or this booking requires a management link.', 'error')
+          navigate('/guest/bookings')
         }
       } else if (status === 404) {
         showToast('Booking not found', 'error')
         navigate(isUsingManageToken ? '/' : '/guest/bookings')
       } else {
-        showToast(message || 'Failed to load booking', 'error')
+        showToast(`Failed to load booking: ${message}`, 'error')
       }
     } finally {
       setIsLoading(false)

@@ -99,9 +99,15 @@ function BookingCard({ booking, onClick }: BookingCardProps) {
           <p className="text-sm font-medium text-gray-700">From</p>
           <p className="text-sm text-gray-600 truncate">{booking.pickup}</p>
         </div>
-        <div>
-          <p className="text-sm font-medium text-gray-700">To</p>
-          <p className="text-sm text-gray-600 truncate">{booking.dropoff}</p>
+          {booking.manage_token ? (
+            <span className="text-blue-600 hover:text-blue-800">
+              View details →
+            </span>
+          ) : (
+            <span className="text-gray-400">
+              Details unavailable
+            </span>
+          )}
         </div>
       </div>
 
