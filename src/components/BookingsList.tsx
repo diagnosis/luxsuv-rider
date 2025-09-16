@@ -99,6 +99,19 @@ function BookingCard({ booking, onClick }: BookingCardProps) {
           <p className="text-sm font-medium text-gray-700">From</p>
           <p className="text-sm text-gray-600 truncate">{booking.pickup}</p>
         </div>
+        <div>
+          <p className="text-sm font-medium text-gray-700">To</p>
+          <p className="text-sm text-gray-600 truncate">{booking.dropoff}</p>
+        </div>
+      </div>
+
+      <div className="flex justify-between items-center text-sm text-gray-600">
+        <div className="flex space-x-4">
+          <span>{booking.passengers} passenger{booking.passengers !== 1 ? 's' : ''}</span>
+          <span>{booking.luggages} luggage</span>
+          <span className="capitalize">{booking.ride_type.replace('_', ' ')}</span>
+        </div>
+        <div>
           {booking.manage_token ? (
             <span className="text-blue-600 hover:text-blue-800">
               View details →
@@ -108,16 +121,7 @@ function BookingCard({ booking, onClick }: BookingCardProps) {
               Details unavailable
             </span>
           )}
-
-      <div className="flex justify-between items-center text-sm text-gray-600">
-        <div className="flex space-x-4">
-          <span>{booking.passengers} passenger{booking.passengers !== 1 ? 's' : ''}</span>
-          <span>{booking.luggages} luggage</span>
-          <span className="capitalize">{booking.ride_type.replace('_', ' ')}</span>
         </div>
-        <span className="text-blue-600 hover:text-blue-800">
-          View details →
-        </span>
       </div>
     </div>
   )
