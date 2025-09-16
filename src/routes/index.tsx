@@ -1,10 +1,13 @@
 import {createFileRoute, Link} from '@tanstack/react-router'
+import { useNavigate } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/')({
   component: RouteComponent,
 })
 
 function RouteComponent() {
+  const navigate = useNavigate()
+
   return <>
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900 pt-20">
       <div className="max-w-6xl mx-auto px-6 py-12">
@@ -19,17 +22,27 @@ function RouteComponent() {
           </p>
           <div className="flex gap-4 justify-center">
             <Link 
-              to="/booking" 
+              to="/guest/book" 
               className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold transition-colors"
             >
               Book Now
             </Link>
-            <Link 
-              to="/booking" 
+            <button
+              onClick={() => {
+                const bookingId = prompt('Enter your Booking ID:')
+                const manageToken = prompt('Enter your Management Token:')
+                if (bookingId && manageToken) {
+                  navigate({
+                    to: '/guest/booking/$id',
+                    params: { id: bookingId },
+                    search: { manage_token: manageToken }
+                  })
+                }
+              }}
               className="border border-white text-white hover:bg-white hover:text-gray-900 px-8 py-3 rounded-lg font-semibold transition-colors"
             >
               Manage Booking
-            </Link>
+            </button>
           </div>
         </div>
 
