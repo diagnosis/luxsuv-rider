@@ -117,15 +117,3 @@ function VerifyEmailPage() {
     </div>
   )
 }
-                onClick={() => navigate({ to: '/', replace: true })}
-                className="text-blue-600 hover:text-blue-800 underline"
-              >
-                Back to home
-              </button>
-            </>
-          )}
-        </div>
-      </div>
-    </div>
-  )
-}
