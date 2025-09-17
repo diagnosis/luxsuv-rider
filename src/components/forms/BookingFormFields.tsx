@@ -1,4 +1,4 @@
-import { UseFormRegister, FieldErrors } from 'react-hook-form'
+import { UseFormRegister, type FieldErrors } from 'react-hook-form'
 import { type CreateBookingInput } from '../../lib/validations'
 
 interface BookingFormFieldsProps {
