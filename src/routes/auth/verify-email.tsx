@@ -1,7 +1,6 @@
 import { createFileRoute, useNavigate, useSearch } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 import { api } from '../../lib/api'
-import { toast } from 'sonner'
 
 export const Route = createFileRoute('/auth/verify-email')({
   component: VerifyEmailPage,
