@@ -1,21 +1,26 @@
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../hooks/useAuth'
+import { useBookings } from '../hooks/useBookings'
 import { AuthTabs } from '../components/AuthTabs'
 import { BookingForm } from '../components/BookingForm'
-import { useToast } from '../components/ui/Toast'
-import type { Booking, GuestBookingResponse } from '../lib/api-types'
+import type { GuestBookingResponse } from '../lib/api-types'
 
-export function Landing() {
+export const Route = createFileRoute('/')({
+  component: LandingPage,
+})
+
+function LandingPage() {
   const [activeTab, setActiveTab] = useState<'auth' | 'guest'>('auth')
   const navigate = useNavigate()
-  const { showToast } = useToast()
+  const { createGuestBooking } = useBookings()
 
   const handleGuestBookingSuccess = (booking: GuestBookingResponse) => {
-    // Show success message with links
-    showToast('Booking created successfully!', 'success')
-    
-    // Navigate to booking detail with manage token
-    navigate(`/guest/bookings/${booking.id}?manage_token=${booking.manage_token}`)
+    navigate({
+      to: '/guest/bookings/$bookingId',
+      params: { bookingId: booking.id.toString() },
+      search: { manage_token: booking.manage_token },
+    })
   }
 
   return (
@@ -92,7 +97,9 @@ export function Landing() {
               </div>
               <BookingForm
                 isGuest={true}
-                onSuccess={handleGuestBookingSuccess}
+                onSuccess={(booking) => {
+                  handleGuestBookingSuccess(booking as GuestBookingResponse)
+                }}
               />
               
               <div className="mt-8 p-4 bg-blue-50 rounded-lg">
@@ -102,7 +109,7 @@ export function Landing() {
                 <p className="text-sm text-blue-800">
                   Want to see all your bookings in one place?{' '}
                   <button
-                    onClick={() => navigate('/guest/access')}
+                    onClick={() => navigate({ to: '/guest/access' })}
                     className="underline hover:text-blue-900 font-medium"
                   >
                     Access your bookings

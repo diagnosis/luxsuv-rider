@@ -1,19 +1,13 @@
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useNavigate } from 'react-router-dom'
-import { apiClient } from '../lib/api'
+import { useAuth } from '../hooks/useAuth'
 import { guestRequestSchema, guestVerifySchema, type GuestRequestData, type GuestVerifyData } from '../lib/schemas'
-import { useAuthStore } from '../store/auth'
-import { useToast } from './ui/Toast'
-import type { GuestAccessResponse } from '../lib/api-types'
+import { Button } from './ui/Button'
 
 export function GuestAccessForm() {
   const [step, setStep] = useState<'request' | 'verify'>('request')
   const [email, setEmail] = useState('')
-  const navigate = useNavigate()
-  const { setGuestAuth } = useAuthStore()
-  const { showToast } = useToast()
 
   return (
     <div className="max-w-md mx-auto">
@@ -32,11 +26,6 @@ export function GuestAccessForm() {
         ) : (
           <VerifyCodeForm
             email={email}
-            onSuccess={(token) => {
-              setGuestAuth(token, email)
-              showToast('Access granted!', 'success')
-              navigate('/guest/bookings')
-            }}
             onBack={() => setStep('request')}
           />
         )}
@@ -50,34 +39,21 @@ interface RequestCodeFormProps {
 }
 
 function RequestCodeForm({ onSuccess }: RequestCodeFormProps) {
-  const { showToast } = useToast()
+  const { requestAccess, isRequestingAccess } = useAuth()
   
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting }
+    formState: { errors }
   } = useForm<GuestRequestData>({
     resolver: zodResolver(guestRequestSchema)
   })
 
-  const onSubmit = async (data: GuestRequestData) => {
-    try {
-      await apiClient.post('/v1/guest/access/request', data)
-      showToast('Verification code sent to your email!', 'success')
-      onSuccess(data.email)
-    } catch (error: any) {
-      const status = error.response?.status
-      const message = error.response?.data?.message || error.message
-      
-      if (status === 400) {
-        showToast('Please enter a valid email address', 'error')
-      } else if (status === 422) {
-        showToast(message, 'error')
-      } else {
-        showToast('Failed to send code. Please try again.', 'error')
-      }
+  const onSubmit = (data: GuestRequestData) => {
+    requestAccess(data.email, {
+      onSuccess: () => onSuccess(data.email)
+    })
     }
-  }
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -95,51 +71,36 @@ function RequestCodeForm({ onSuccess }: RequestCodeFormProps) {
         {errors.email && <p className="text-sm text-red-600 mt-1">{errors.email.message}</p>}
       </div>
 
-      <button
+      <Button
         type="submit"
-        disabled={isSubmitting}
-        className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+        isLoading={isRequestingAccess}
+        className="w-full"
       >
-        {isSubmitting ? 'Sending code...' : 'Send Verification Code'}
-      </button>
+        Send Verification Code
+      </Button>
     </form>
   )
 }
 
 interface VerifyCodeFormProps {
   email: string
-  onSuccess: (token: string) => void
   onBack: () => void
 }
 
-function VerifyCodeForm({ email, onSuccess, onBack }: VerifyCodeFormProps) {
-  const { showToast } = useToast()
+function VerifyCodeForm({ email, onBack }: VerifyCodeFormProps) {
+  const { verifyAccess, isVerifyingAccess } = useAuth()
   
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting }
+    formState: { errors }
   } = useForm<GuestVerifyData>({
     resolver: zodResolver(guestVerifySchema),
     defaultValues: { email }
   })
 
-  const onSubmit = async (data: GuestVerifyData) => {
-    try {
-      const response = await apiClient.post<GuestAccessResponse>('/v1/guest/access/verify', data)
-      onSuccess(response.data.session_token)
-    } catch (error: any) {
-      const status = error.response?.status
-      const message = error.response?.data?.message || error.message
-      
-      if (status === 401) {
-        showToast('Invalid verification code', 'error')
-      } else if (status === 422) {
-        showToast(message, 'error')
-      } else {
-        showToast('Verification failed. Please try again.', 'error')
-      }
-    }
+  const onSubmit = (data: GuestVerifyData) => {
+    verifyAccess(data)
   }
 
   return (
@@ -166,13 +127,13 @@ function VerifyCodeForm({ email, onSuccess, onBack }: VerifyCodeFormProps) {
         {errors.code && <p className="text-sm text-red-600 mt-1">{errors.code.message}</p>}
       </div>
 
-      <button
+      <Button
         type="submit"
-        disabled={isSubmitting}
-        className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+        isLoading={isVerifyingAccess}
+        className="w-full"
       >
-        {isSubmitting ? 'Verifying...' : 'Verify Code'}
-      </button>
+        Verify Code
+      </Button>
 
       <button
         type="button"

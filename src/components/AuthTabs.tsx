@@ -1,12 +1,9 @@
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useNavigate } from 'react-router-dom'
-import { apiClient } from '../lib/api'
+import { useAuth } from '../hooks/useAuth'
 import { registerSchema, loginSchema, type RegisterData, type LoginData } from '../lib/schemas'
-import { useAuthStore } from '../store/auth'
-import { useToast } from './ui/Toast'
-import type { LoginResponse } from '../lib/api-types'
+import { Button } from './ui/Button'
 
 export function AuthTabs() {
   const [activeTab, setActiveTab] = useState<'signin' | 'signup'>('signin')
@@ -42,36 +39,18 @@ export function AuthTabs() {
 }
 
 function SignInForm() {
-  const navigate = useNavigate()
-  const { setRiderAuth } = useAuthStore()
-  const { showToast } = useToast()
+  const { login, isLoggingIn } = useAuth()
   
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting }
+    formState: { errors }
   } = useForm<LoginData>({
     resolver: zodResolver(loginSchema)
   })
 
-  const onSubmit = async (data: LoginData) => {
-    try {
-      const response = await apiClient.post<LoginResponse>('/v1/auth/login', data)
-      setRiderAuth(response.data.access_token, response.data.user)
-      showToast('Welcome back!', 'success')
-      navigate('/bookings')
-    } catch (error: any) {
-      const status = error.response?.status
-      const message = error.response?.data?.message || error.message
-      
-      if (status === 401) {
-        showToast('Invalid email or password', 'error')
-      } else if (status === 422) {
-        showToast(message, 'error')
-      } else {
-        showToast('Login failed. Please try again.', 'error')
-      }
-    }
+  const onSubmit = (data: LoginData) => {
+    login(data)
   }
 
   return (
@@ -102,44 +81,30 @@ function SignInForm() {
         {errors.password && <p className="text-sm text-red-600 mt-1">{errors.password.message}</p>}
       </div>
 
-      <button
+      <Button
         type="submit"
-        disabled={isSubmitting}
-        className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+        isLoading={isLoggingIn}
+        className="w-full"
       >
-        {isSubmitting ? 'Signing in...' : 'Sign In'}
-      </button>
+        Sign In
+      </Button>
     </form>
   )
 }
 
 function SignUpForm() {
-  const { showToast } = useToast()
+  const { register: registerUser, isRegistering } = useAuth()
   
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting }
+    formState: { errors }
   } = useForm<RegisterData>({
     resolver: zodResolver(registerSchema)
   })
 
-  const onSubmit = async (data: RegisterData) => {
-    try {
-      await apiClient.post('/v1/auth/register', data)
-      showToast('Registration successful! Check your email to verify your account.', 'success')
-    } catch (error: any) {
-      const status = error.response?.status
-      const message = error.response?.data?.message || error.message
-      
-      if (status === 400) {
-        showToast('Please check your input and try again', 'error')
-      } else if (status === 422) {
-        showToast(message, 'error')
-      } else {
-        showToast('Registration failed. Please try again.', 'error')
-      }
-    }
+  const onSubmit = (data: RegisterData) => {
+    registerUser(data)
   }
 
   return (
@@ -196,13 +161,14 @@ function SignUpForm() {
         {errors.password && <p className="text-sm text-red-600 mt-1">{errors.password.message}</p>}
       </div>
 
-      <button
+      <Button
         type="submit"
-        disabled={isSubmitting}
-        className="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+        isLoading={isRegistering}
+        variant="secondary"
+        className="w-full"
       >
-        {isSubmitting ? 'Creating account...' : 'Create Account'}
-      </button>
+        Create Account
+      </Button>
     </form>
   )
 }

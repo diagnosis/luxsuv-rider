@@ -1,6 +1,11 @@
-import { GuestAccessForm } from '../components/GuestAccessForm'
+import { createFileRoute } from '@tanstack/react-router'
+import { GuestAccessForm } from '../../components/GuestAccessForm'
 
-export function GuestAccess() {
+export const Route = createFileRoute('/guest/access')({
+  component: GuestAccessPage,
+})
+
+function GuestAccessPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}

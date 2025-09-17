@@ -1,16 +1,26 @@
+import { createFileRoute, useNavigate, useSearch } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
-import { apiClient } from '../lib/api'
-import { useToast } from '../components/ui/Toast'
+import { api } from '../../lib/api'
+import { toast } from 'sonner'
 
-export function VerifyEmail() {
-  const [searchParams] = useSearchParams()
+type VerifyEmailSearch = {
+  token?: string
+}
+
+export const Route = createFileRoute('/auth/verify-email')({
+  component: VerifyEmailPage,
+  validateSearch: (search: Record<string, unknown>): VerifyEmailSearch => {
+    return {
+      token: search.token as string,
+    }
+  },
+})
+
+function VerifyEmailPage() {
   const navigate = useNavigate()
-  const { showToast } = useToast()
+  const { token } = useSearch({ from: '/auth/verify-email' })
   const [status, setStatus] = useState<'verifying' | 'success' | 'error'>('verifying')
   const [message, setMessage] = useState('')
-
-  const token = searchParams.get('token')
 
   useEffect(() => {
     if (!token) {
@@ -19,43 +29,31 @@ export function VerifyEmail() {
       return
     }
 
-    console.log('VerifyEmail: Starting verification with token:', token)
     let isCancelled = false
 
     const verifyEmail = async () => {
       try {
-        const endpoint = `/v1/auth/verify-email?token=${encodeURIComponent(token)}`
-        console.log('VerifyEmail: Making request to:', endpoint)
-        
-        const response = await apiClient.post(endpoint)
-        console.log('VerifyEmail: Response received:', response.status)
+        const response = await api.verifyEmail(token)
         
         if (isCancelled) return
         
         setStatus('success')
-        setMessage(response.data?.message || 'Email verified successfully!')
-        showToast('Email verified successfully!', 'success')
+        setMessage(response?.message || 'Email verified successfully!')
+        toast.success('Email verified successfully!')
         
-        // Redirect after success
         setTimeout(() => {
           if (!isCancelled) {
-            console.log('VerifyEmail: Redirecting to login')
-            navigate('/login', { replace: true })
+            navigate({ to: '/auth/login', replace: true })
           }
         }, 2000)
         
       } catch (error: any) {
         if (isCancelled) return
         
-        console.error('VerifyEmail: Verification error:', error)
-        console.error('VerifyEmail: Error response:', error.response)
         setStatus('error')
-        
-        const errorMessage = error.response?.data?.message || 
-                           error.message || 
-                           'Verification failed'
+        const errorMessage = error.details || error.message || 'Verification failed'
         setMessage(errorMessage)
-        showToast(errorMessage, 'error')
+        toast.error(errorMessage)
       }
     }
 
@@ -64,7 +62,7 @@ export function VerifyEmail() {
     return () => {
       isCancelled = true
     }
-  }, [token, navigate, showToast])
+  }, [token, navigate])
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -85,7 +83,7 @@ export function VerifyEmail() {
               <p className="text-gray-600 mb-4">{message}</p>
               <p className="text-sm text-gray-500">Redirecting to login page...</p>
               <button
-                onClick={() => navigate('/login', { replace: true })}
+                onClick={() => navigate({ to: '/auth/login', replace: true })}
                 className="mt-4 text-blue-600 hover:text-blue-800 underline"
               >
                 Go to login now
@@ -99,7 +97,7 @@ export function VerifyEmail() {
               <h2 className="text-xl font-semibold text-gray-900 mb-2">Verification Failed</h2>
               <p className="text-gray-600 mb-4">{message}</p>
               <button
-                onClick={() => navigate('/', { replace: true })}
+                onClick={() => navigate({ to: '/', replace: true })}
                 className="text-blue-600 hover:text-blue-800 underline"
               >
                 Back to home

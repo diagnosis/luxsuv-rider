@@ -1,43 +1,28 @@
+import { createFileRoute, useNavigate, Link } from '@tanstack/react-router'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useNavigate } from 'react-router-dom'
-import { apiClient } from '../lib/api'
-import { loginSchema, type LoginData } from '../lib/schemas'
-import { useAuthStore } from '../store/auth'
-import { useToast } from '../components/ui/Toast'
-import type { LoginResponse } from '../lib/api-types'
+import { useAuth } from '../../hooks/useAuth'
+import { loginSchema, type LoginData } from '../../lib/schemas'
+import { Button } from '../../components/ui/Button'
 
-export function Login() {
+export const Route = createFileRoute('/auth/login')({
+  component: LoginPage,
+})
+
+function LoginPage() {
   const navigate = useNavigate()
-  const { setRiderAuth } = useAuthStore()
-  const { showToast } = useToast()
+  const { login, isLoggingIn } = useAuth()
   
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting }
+    formState: { errors }
   } = useForm<LoginData>({
     resolver: zodResolver(loginSchema)
   })
 
-  const onSubmit = async (data: LoginData) => {
-    try {
-      const response = await apiClient.post<LoginResponse>('/v1/auth/login', data)
-      setRiderAuth(response.data.access_token, response.data.user)
-      showToast('Welcome back!', 'success')
-      navigate('/bookings')
-    } catch (error: any) {
-      const status = error.response?.status
-      const message = error.response?.data?.message || error.message
-      
-      if (status === 401) {
-        showToast('Invalid email or password', 'error')
-      } else if (status === 422) {
-        showToast(message, 'error')
-      } else {
-        showToast('Login failed. Please try again.', 'error')
-      }
-    }
+  const onSubmit = (data: LoginData) => {
+    login(data)
   }
 
   return (
@@ -75,24 +60,24 @@ export function Login() {
             {errors.password && <p className="text-sm text-red-600 mt-1">{errors.password.message}</p>}
           </div>
 
-          <button
+          <Button
             type="submit"
-            disabled={isSubmitting}
-            className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            isLoading={isLoggingIn}
+            className="w-full"
           >
-            {isSubmitting ? 'Signing in...' : 'Sign In'}
-          </button>
+            {isLoggingIn ? 'Signing in...' : 'Sign In'}
+          </Button>
         </form>
 
         <div className="mt-6 text-center">
           <p className="text-sm text-gray-600">
             Don't have an account?{' '}
-            <button
-              onClick={() => navigate('/')}
+            <Link
+              to="/"
               className="text-blue-600 hover:text-blue-800 underline"
             >
               Sign up
-            </button>
+            </Link>
           </p>
         </div>
       </div>

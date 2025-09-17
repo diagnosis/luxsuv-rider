@@ -1,9 +1,9 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { apiClient } from '../lib/api'
+import { useBookings } from '../hooks/useBookings'
 import { riderBookingSchema, guestBookingSchema, type RiderBookingData, type GuestBookingData } from '../lib/schemas'
 import { useAuthStore } from '../store/auth'
-import { useToast } from './ui/Toast'
+import { Button } from './ui/Button'
 import type { Booking, GuestBookingResponse } from '../lib/api-types'
 
 interface BookingFormProps {
@@ -13,14 +13,14 @@ interface BookingFormProps {
 
 export function BookingForm({ isGuest, onSuccess }: BookingFormProps) {
   const { user } = useAuthStore()
-  const { showToast } = useToast()
+  const { createGuestBooking, isCreatingGuestBooking, createRiderBooking, isCreatingRiderBooking } = useBookings()
 
   const schema = isGuest ? guestBookingSchema : riderBookingSchema
   
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting }
+    formState: { errors }
   } = useForm<GuestBookingData | RiderBookingData>({
     resolver: zodResolver(schema),
     defaultValues: isGuest ? {} : {
@@ -31,32 +31,22 @@ export function BookingForm({ isGuest, onSuccess }: BookingFormProps) {
   })
 
   const onSubmit = async (data: GuestBookingData | RiderBookingData) => {
-    try {
-      // Format datetime for API
-      const scheduledAt = new Date(data.scheduled_at).toISOString()
-      const payload = { ...data, scheduled_at: scheduledAt }
+    // Format datetime for API
+    const scheduledAt = new Date(data.scheduled_at).toISOString()
+    const payload = { ...data, scheduled_at: scheduledAt }
 
-      const endpoint = isGuest ? '/v1/guest/bookings' : '/v1/rider/bookings'
-      console.log('BookingForm: Making request to:', endpoint, 'with payload:', payload)
-      const response = await apiClient.post(endpoint, payload)
-      
-      showToast('Booking created successfully!', 'success')
-      onSuccess(response.data)
-    } catch (error: any) {
-      const status = error.response?.status
-      const message = error.response?.data?.message || error.message
-      
-      if (status === 400) {
-        showToast('Please check your booking details', 'error')
-      } else if (status === 401) {
-        showToast('Session expired. Please log in again.', 'error')
-      } else if (status === 422) {
-        showToast(message, 'error')
-      } else {
-        showToast('Failed to create booking. Please try again.', 'error')
-      }
+    if (isGuest) {
+      createGuestBooking(payload, {
+        onSuccess: (data) => onSuccess(data)
+      })
+    } else {
+      createRiderBooking(payload, {
+        onSuccess: (data) => onSuccess(data)
+      })
     }
   }
+
+  const isSubmitting = isCreatingGuestBooking || isCreatingRiderBooking
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -250,13 +240,14 @@ export function BookingForm({ isGuest, onSuccess }: BookingFormProps) {
         </div>
       </div>
 
-      <button
+      <Button
         type="submit"
-        disabled={isSubmitting}
-        className="w-full bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+        isLoading={isSubmitting}
+        className="w-full"
+        size="lg"
       >
-        {isSubmitting ? 'Creating booking...' : 'Book Now'}
-      </button>
+        Book Now
+      </Button>
     </form>
   )
 }

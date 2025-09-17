@@ -1,56 +1,24 @@
-import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { apiClient } from '../lib/api'
-import { useAuthStore } from '../store/auth'
-import { useToast } from '../components/ui/Toast'
-import { BookingsList } from '../components/BookingsList'
-import { BookingDetail } from '../components/BookingDetail'
-import { BookingForm } from '../components/BookingForm'
-import { RouteGuard } from '../components/RouteGuard'
-import type { Booking } from '../lib/api-types'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { useState } from 'react'
+import { useAuth } from '../../../hooks/useAuth'
+import { useBookings } from '../../../hooks/useBookings'
+import { BookingsList } from '../../../components/BookingsList'
+import { BookingDetail } from '../../../components/BookingDetail'
+import { BookingForm } from '../../../components/BookingForm'
+import { Button } from '../../../components/ui/Button'
+import type { Booking } from '../../../lib/api-types'
 
-export function RiderBookings() {
-  return (
-    <RouteGuard requiresRiderAuth>
-      <RiderBookingsContent />
-    </RouteGuard>
-  )
-}
+export const Route = createFileRoute('/rider/bookings/')({
+  component: RiderBookingsPage,
+})
 
-function RiderBookingsContent() {
-  const [bookings, setBookings] = useState<Booking[]>([])
+function RiderBookingsPage() {
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null)
   const [view, setView] = useState<'list' | 'detail' | 'create'>('list')
-  const [isLoading, setIsLoading] = useState(false)
   
   const navigate = useNavigate()
-  const { user, clearRiderAuth } = useAuthStore()
-  const { showToast } = useToast()
-
-  const loadBookings = async () => {
-    setIsLoading(true)
-    try {
-      const response = await apiClient.get<Booking[]>('/v1/rider/bookings')
-      setBookings(response.data)
-    } catch (error: any) {
-      const status = error.response?.status
-      const message = error.response?.data?.message || error.message
-      
-      if (status === 401) {
-        showToast('Session expired. Please log in again.', 'error')
-        clearRiderAuth()
-        navigate('/login')
-      } else {
-        showToast(message || 'Failed to load bookings', 'error')
-      }
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    loadBookings()
-  }, [])
+  const { user, logout } = useAuth()
+  const { bookings, isLoading, createRiderBooking, refetch } = useBookings()
 
   const handleBookingClick = (booking: Booking) => {
     setSelectedBooking(booking)
@@ -59,12 +27,16 @@ function RiderBookingsContent() {
 
   const handleBookingSuccess = () => {
     setView('list')
-    loadBookings()
+    refetch()
   }
 
-  const handleSignOut = () => {
-    clearRiderAuth()
-    navigate('/')
+  const handleUpdate = () => {
+    refetch()
+  }
+
+  const handleCancel = () => {
+    setView('list')
+    refetch()
   }
 
   return (
@@ -81,15 +53,14 @@ function RiderBookingsContent() {
             </div>
             <div className="flex items-center space-x-4">
               {view === 'list' && (
-                <button
+                <Button
                   onClick={() => setView('create')}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                 >
                   New Booking
-                </button>
+                </Button>
               )}
               <button
-                onClick={handleSignOut}
+                onClick={logout}
                 className="text-gray-600 hover:text-gray-800 underline"
               >
                 Sign Out
@@ -117,23 +88,21 @@ function RiderBookingsContent() {
         {view === 'detail' && selectedBooking && (
           <div>
             <div className="flex items-center mb-8">
-              <button
+              <Button
+                variant="ghost"
                 onClick={() => setView('list')}
-                className="text-blue-600 hover:text-blue-800 mr-4"
+                className="mr-4"
               >
                 ← Back to bookings
-              </button>
+              </Button>
               <h2 className="text-3xl font-bold text-gray-900">Booking Details</h2>
             </div>
             <BookingDetail
               booking={selectedBooking}
               canEdit={false}
               canCancel={true}
-              onUpdate={loadBookings}
-              onCancel={() => {
-                setView('list')
-                loadBookings()
-              }}
+              onUpdate={handleUpdate}
+              onCancel={handleCancel}
             />
           </div>
         )}
@@ -141,12 +110,13 @@ function RiderBookingsContent() {
         {view === 'create' && (
           <div>
             <div className="flex items-center mb-8">
-              <button
+              <Button
+                variant="ghost"
                 onClick={() => setView('list')}
-                className="text-blue-600 hover:text-blue-800 mr-4"
+                className="mr-4"
               >
                 ← Back to bookings
-              </button>
+              </Button>
               <h2 className="text-3xl font-bold text-gray-900">New Booking</h2>
             </div>
             <div className="bg-white rounded-lg shadow-md p-8">
