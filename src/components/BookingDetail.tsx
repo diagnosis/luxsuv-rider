@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { format } from 'date-fns'
 import { apiClient } from '../lib/api'
 import { guestBookingUpdateSchema, type GuestBookingUpdateData } from '../lib/schemas'
-import { useToast } from './ui/Toast'
+import { useToast } from './ui/Toast.tsx'
 import type { Booking } from '../lib/api-types'
 
 interface BookingDetailProps {
