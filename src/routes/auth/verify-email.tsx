@@ -3,18 +3,18 @@ import { useEffect, useState } from 'react'
 import { api } from '../../lib/api'
 import { toast } from 'sonner'
 
-type VerifyEmailSearch = {
-  token?: string
-}
-
 export const Route = createFileRoute('/auth/verify-email')({
   component: VerifyEmailPage,
   validateSearch: (search: Record<string, unknown>): VerifyEmailSearch => {
     return {
-      token: search.token as string,
+      token: typeof search.token === 'string' ? search.token : undefined,
     }
   },
 })
+
+type VerifyEmailSearch = {
+  token?: string
+}
 
 function VerifyEmailPage() {
   const navigate = useNavigate()
@@ -25,7 +25,7 @@ function VerifyEmailPage() {
   useEffect(() => {
     if (!token) {
       setStatus('error')
-      setMessage('No verification token provided')
+      setMessage('Invalid verification link. Please check your email for the correct link.')
       return
     }
 
@@ -39,7 +39,6 @@ function VerifyEmailPage() {
         
         setStatus('success')
         setMessage(response?.message || 'Email verified successfully!')
-        toast.success('Email verified successfully!')
         
         setTimeout(() => {
           if (!isCancelled) {
@@ -51,9 +50,10 @@ function VerifyEmailPage() {
         if (isCancelled) return
         
         setStatus('error')
-        const errorMessage = error.details || error.message || 'Verification failed'
+        const errorMessage = error.status === 404 
+          ? 'Invalid or expired verification link'
+          : error.details || error.message || 'Verification failed'
         setMessage(errorMessage)
-        toast.error(errorMessage)
       }
     }
 
@@ -96,7 +96,27 @@ function VerifyEmailPage() {
               <div className="text-red-600 text-5xl mb-4">✗</div>
               <h2 className="text-xl font-semibold text-gray-900 mb-2">Verification Failed</h2>
               <p className="text-gray-600 mb-4">{message}</p>
-              <button
+              <div className="space-y-2">
+                <button
+                  onClick={() => navigate({ to: '/', replace: true })}
+                  className="text-blue-600 hover:text-blue-800 underline block"
+                >
+                  Back to home
+                </button>
+                <button
+                  onClick={() => navigate({ to: '/auth/login', replace: true })}
+                  className="text-blue-600 hover:text-blue-800 underline block"
+                >
+                  Go to login
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
                 onClick={() => navigate({ to: '/', replace: true })}
                 className="text-blue-600 hover:text-blue-800 underline"
               >
