@@ -1,12 +1,22 @@
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useNavigate } from '@tanstack/react-router'
 import { useAuth } from '../hooks/useAuth'
 import { registerSchema, loginSchema, type RegisterData, type LoginData } from '../lib/schemas'
 import { Button } from './ui/Button'
 
 export function AuthTabs() {
   const [activeTab, setActiveTab] = useState<'signin' | 'signup'>('signin')
+  const [registrationSuccess, setRegistrationSuccess] = useState(false)
+  const [successEmail, setSuccessEmail] = useState('')
+
+  if (registrationSuccess) {
+    return <RegistrationSuccessScreen email={successEmail} onContinue={() => {
+      setRegistrationSuccess(false)
+      setActiveTab('signin')
+    }} />
+  }
 
   return (
     <div className="w-full max-w-md mx-auto">
@@ -33,11 +43,41 @@ export function AuthTabs() {
         </button>
       </div>
 
-      {activeTab === 'signin' ? <SignInForm /> : <SignUpForm />}
+      {activeTab === 'signin' ? <SignInForm /> : <SignUpForm onSuccess={(email) => {
+        setSuccessEmail(email)
+        setRegistrationSuccess(true)
+      }} />}
     </div>
   )
 }
 
+interface RegistrationSuccessScreenProps {
+  email: string
+  onContinue: () => void
+}
+
+function RegistrationSuccessScreen({ email, onContinue }: RegistrationSuccessScreenProps) {
+  return (
+    <div className="w-full max-w-md mx-auto text-center">
+      <div className="bg-white rounded-lg shadow-md p-8">
+        <div className="text-green-600 text-6xl mb-6">✓</div>
+        <h2 className="text-2xl font-bold text-gray-900 mb-4">Registration Successful!</h2>
+        <p className="text-gray-600 mb-6">
+          We've sent a verification email to:
+        </p>
+        <p className="font-semibold text-gray-900 bg-gray-50 px-4 py-2 rounded-lg mb-6">
+          {email}
+        </p>
+        <p className="text-gray-600 mb-8">
+          Please check your email and click the verification link to activate your account.
+        </p>
+        <Button onClick={onContinue} className="w-full" size="lg">
+          Continue to Sign In
+        </Button>
+      </div>
+    </div>
+  )
+}
 function SignInForm() {
   const { login, isLoggingIn } = useAuth()
   
@@ -92,7 +132,11 @@ function SignInForm() {
   )
 }
 
-function SignUpForm() {
+interface SignUpFormProps {
+  onSuccess: (email: string) => void
+}
+
+function SignUpForm({ onSuccess }: SignUpFormProps) {
   const { register: registerUser, isRegistering } = useAuth()
   
   const {
@@ -103,8 +147,10 @@ function SignUpForm() {
     resolver: zodResolver(registerSchema)
   })
 
-  const onSubmit = (data: RegisterData) => {
-    registerUser(data)
+  const onSubmit = async (data: RegisterData) => {
+    registerUser(data, {
+      onSuccess: () => onSuccess(data.email)
+    })
   }
 
   return (

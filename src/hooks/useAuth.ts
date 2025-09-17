@@ -14,9 +14,12 @@ export function useAuth() {
 
   const registerMutation = useMutation({
     mutationFn: (data: any) => apiClient.register(data),
-    onSuccess: () => {
+    onSuccess: (_, variables, context: any) => {
       analytics.trackUserRegister()
-      showToast('Registration successful! Check your email to verify your account.', 'success')
+      // Don't show toast here - let the component handle success UI
+      if (context?.onSuccess) {
+        context.onSuccess()
+      }
     },
     onError: (error: any) => {
       const message = error.details || error.message || 'Registration failed'
@@ -87,7 +90,9 @@ export function useAuth() {
     isAuthenticated: !!(jwt && user) || !!(guestSessionToken && guestEmail),
 
     // Actions
-    register: registerMutation.mutate,
+    register: (data: any, options?: { onSuccess?: () => void }) => {
+      registerMutation.mutate(data, { ...options })
+    },
     isRegistering: registerMutation.isPending,
     
     login: loginMutation.mutate,
