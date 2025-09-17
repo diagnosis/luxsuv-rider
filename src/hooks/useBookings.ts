@@ -1,21 +1,23 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { api } from '../lib/api'
+import { apiClient } from '../lib/api'
 import { useAuthStore } from '../store/auth'
-import { toast } from 'sonner'
+import { useToast } from '../components/ui/Toast'
+import { analytics } from '../lib/analytics'
 import type { Booking, GuestBookingResponse } from '../lib/api-types'
 
 export function useBookings() {
   const { isRiderAuthenticated, isGuestAuthenticated } = useAuth()
   const queryClient = useQueryClient()
+  const { showToast } = useToast()
 
   // List bookings query
   const bookingsQuery = useQuery({
     queryKey: ['bookings'],
     queryFn: () => {
       if (isRiderAuthenticated) {
-        return api.listRiderBookings() as Promise<Booking[]>
+        return apiClient.listRiderBookings() as Promise<Booking[]>
       } else if (isGuestAuthenticated) {
-        return api.listGuestBookings() as Promise<Booking[]>
+        return apiClient.listGuestBookings() as Promise<Booking[]>
       }
       throw new Error('Not authenticated')
     },
@@ -24,9 +26,10 @@ export function useBookings() {
 
   // Create booking mutations
   const createGuestBookingMutation = useMutation({
-    mutationFn: (data: any) => api.createGuestBooking(data) as Promise<GuestBookingResponse>,
+    mutationFn: (data: any) => apiClient.createGuestBooking(data) as Promise<GuestBookingResponse>,
     onSuccess: (newBooking) => {
-      toast.success('Booking created successfully!')
+      analytics.trackBookingCreated(newBooking.id.toString())
+      showToast('Booking created successfully!', 'success')
       // Invalidate bookings if user is authenticated
       if (isGuestAuthenticated) {
         queryClient.invalidateQueries({ queryKey: ['bookings'] })
@@ -34,21 +37,22 @@ export function useBookings() {
     },
     onError: (error: any) => {
       const message = error.details || error.message || 'Failed to create booking'
-      toast.error(message)
+      showToast(message, 'error')
     },
   })
 
   const createRiderBookingMutation = useMutation({
-    mutationFn: (data: any) => api.createRiderBooking(data) as Promise<Booking>,
+    mutationFn: (data: any) => apiClient.createRiderBooking(data) as Promise<Booking>,
     onSuccess: (newBooking) => {
       queryClient.setQueryData(['bookings'], (old: Booking[] = []) => 
         [newBooking, ...old]
       )
-      toast.success('Booking created successfully!')
+      analytics.trackBookingCreated(newBooking.id.toString())
+      showToast('Booking created successfully!', 'success')
     },
     onError: (error: any) => {
       const message = error.details || error.message || 'Failed to create booking'
-      toast.error(message)
+      showToast(message, 'error')
     },
   })
 
@@ -75,33 +79,37 @@ export function useBooking(id: string, manageToken?: string) {
 
   const bookingQuery = useQuery({
     queryKey: ['booking', id, manageToken],
-    queryFn: () => api.getGuestBooking(id, manageToken) as Promise<Booking>,
+    queryFn: () => apiClient.getGuestBooking(id, manageToken) as Promise<Booking>,
     enabled: !!id,
   })
 
+  const { showToast } = useToast()
+
   const updateBookingMutation = useMutation({
-    mutationFn: (data: any) => api.updateGuestBooking(id, data, manageToken),
+    mutationFn: (data: any) => apiClient.updateGuestBooking(id, data, manageToken),
     onSuccess: () => {
+      analytics.trackBookingUpdated(id)
       queryClient.invalidateQueries({ queryKey: ['booking', id, manageToken] })
       queryClient.invalidateQueries({ queryKey: ['bookings'] })
-      toast.success('Booking updated successfully!')
+      showToast('Booking updated successfully!', 'success')
     },
     onError: (error: any) => {
       const message = error.details || error.message || 'Failed to update booking'
-      toast.error(message)
+      showToast(message, 'error')
     },
   })
 
   const cancelBookingMutation = useMutation({
-    mutationFn: () => api.cancelGuestBooking(id, manageToken),
+    mutationFn: () => apiClient.cancelGuestBooking(id, manageToken),
     onSuccess: () => {
+      analytics.trackBookingCancelled(id)
       queryClient.invalidateQueries({ queryKey: ['booking', id, manageToken] })
       queryClient.invalidateQueries({ queryKey: ['bookings'] })
-      toast.success('Booking cancelled successfully')
+      showToast('Booking cancelled successfully', 'success')
     },
     onError: (error: any) => {
       const message = error.details || error.message || 'Failed to cancel booking'
-      toast.error(message)
+      showToast(message, 'error')
     },
   })
 

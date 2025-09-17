@@ -169,4 +169,7 @@ class BookingAPI {
   }
 }
 
-export const api = new BookingAPI()
+export const apiClient = new BookingAPI()
+
+// Legacy export for backward compatibility
+export const api = apiClient
