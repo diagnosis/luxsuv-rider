@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate, useSearch } from '@tanstack/react-router'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { apiClient } from '../lib/api'
+import { useAuthStore } from '../store/auth'
 
 type VerifyEmailSearch = {
   token?: string
@@ -18,36 +19,40 @@ export const Route = createFileRoute('/verify-email')({
 function VerifyEmailPage() {
   const navigate = useNavigate()
   const { token } = useSearch({ from: '/verify-email' })
+  const { clearAll } = useAuthStore()
   const [status, setStatus] = useState<'verifying' | 'success' | 'error'>('verifying')
   const [message, setMessage] = useState('')
+  const verificationAttempted = useRef(false)
 
   useEffect(() => {
+    // Clear any existing auth state to prevent automatic API calls
+    clearAll()
+    
     if (!token) {
       setStatus('error')
       setMessage('Invalid verification link. Please check your email for the correct link.')
       return
     }
 
-    let isCancelled = false
+    // Prevent duplicate verification attempts
+    if (verificationAttempted.current) {
+      return
+    }
+    verificationAttempted.current = true
 
     const verifyEmail = async () => {
       try {
         const response = await apiClient.verifyEmail(token)
         
-        if (isCancelled) return
-        
         setStatus('success')
         setMessage(response?.message || 'Email verified successfully!')
         
+        // Navigate after a short delay
         setTimeout(() => {
-          if (!isCancelled) {
-            navigate({ to: '/auth/login', replace: true })
-          }
-        }, 2000)
+          navigate({ to: '/auth/login', replace: true })
+        }, 1500)
         
       } catch (error: any) {
-        if (isCancelled) return
-        
         setStatus('error')
         const errorMessage = error.status === 404 
           ? 'Invalid or expired verification link'
@@ -57,11 +62,7 @@ function VerifyEmailPage() {
     }
 
     verifyEmail()
-
-    return () => {
-      isCancelled = true
-    }
-  }, [token, navigate])
+  }, [token, navigate, clearAll])
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
