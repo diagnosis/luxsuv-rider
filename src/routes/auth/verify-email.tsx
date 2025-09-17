@@ -1,6 +1,10 @@
 import { createFileRoute, useNavigate, useSearch } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
-import { api } from '../../lib/api'
+import { apiClient } from '../../lib/api'
+
+type VerifyEmailSearch = {
+  token?: string
+}
 
 export const Route = createFileRoute('/auth/verify-email')({
   component: VerifyEmailPage,
@@ -10,10 +14,6 @@ export const Route = createFileRoute('/auth/verify-email')({
     }
   },
 })
-
-type VerifyEmailSearch = {
-  token?: string
-}
 
 function VerifyEmailPage() {
   const navigate = useNavigate()
@@ -32,7 +32,7 @@ function VerifyEmailPage() {
 
     const verifyEmail = async () => {
       try {
-        const response = await api.verifyEmail(token)
+        const response = await apiClient.verifyEmail(token)
         
         if (isCancelled) return
         
