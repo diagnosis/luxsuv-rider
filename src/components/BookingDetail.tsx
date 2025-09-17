@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { format } from 'date-fns'
-import { apiClient } from '../lib/api'
+import { useBooking } from '../hooks/useBookings'
 import { guestBookingUpdateSchema, type GuestBookingUpdateData } from '../lib/schemas'
 import { useToast } from './ui/Toast.tsx'
 import type { Booking } from '../lib/api-types'
@@ -17,8 +17,8 @@ interface BookingDetailProps {
 
 export function BookingDetail({ booking, canEdit, canCancel, onUpdate, onCancel }: BookingDetailProps) {
   const [isEditing, setIsEditing] = useState(false)
-  const [isSubmitting, setIsSubmitting] = useState(false)
   const { showToast } = useToast()
+  const { updateBooking, cancelBooking, isUpdating, isCancelling } = useBooking(booking.id.toString(), booking.manage_token)
 
   const {
     register,
@@ -66,55 +66,35 @@ export function BookingDetail({ booking, canEdit, canCancel, onUpdate, onCancel 
   }
 
   const onSubmit = async (data: GuestBookingUpdateData) => {
-    setIsSubmitting(true)
-    try {
-      // Only send fields that have changed
-      const changes: Partial<GuestBookingUpdateData> = {}
-      Object.keys(data).forEach((key) => {
-        const field = key as keyof GuestBookingUpdateData
-        const newValue = data[field]
-        const originalValue = field === 'scheduled_at' 
-          ? new Date(booking.scheduled_at).toISOString().slice(0, 16)
-          : booking[field as keyof Booking]
-        
-        if (newValue !== originalValue && newValue !== undefined) {
-          if (field === 'scheduled_at' && typeof newValue === 'string') {
-            ;(changes as any)[field] = new Date(newValue).toISOString()
-          } else {
-            ;(changes as any)[field] = newValue
-          }
-        }
-      })
-
-      if (Object.keys(changes).length === 0) {
-        setIsEditing(false)
-        return
-      }
-
-      const url = booking.manage_token
-        ? `/v1/guest/bookings/${booking.id}?manage_token=${booking.manage_token}`
-        : `/v1/guest/bookings/${booking.id}`
-
-      await apiClient.patch(url, changes)
-      showToast('Booking updated successfully!', 'success')
-      setIsEditing(false)
-      onUpdate()
-    } catch (error: any) {
-      const status = error.response?.status
-      const message = error.response?.data?.message || error.message
+    // Only send fields that have changed
+    const changes: Partial<GuestBookingUpdateData> = {}
+    Object.keys(data).forEach((key) => {
+      const field = key as keyof GuestBookingUpdateData
+      const newValue = data[field]
+      const originalValue = field === 'scheduled_at' 
+        ? new Date(booking.scheduled_at).toISOString().slice(0, 16)
+        : booking[field as keyof Booking]
       
-      if (status === 400) {
-        showToast('Please check your booking details', 'error')
-      } else if (status === 401) {
-        showToast('Session expired. Please log in again.', 'error')
-      } else if (status === 422) {
-        showToast(message, 'error')
-      } else {
-        showToast('Failed to update booking. Please try again.', 'error')
+      if (newValue !== originalValue && newValue !== undefined) {
+        if (field === 'scheduled_at' && typeof newValue === 'string') {
+          ;(changes as any)[field] = new Date(newValue).toISOString()
+        } else {
+          ;(changes as any)[field] = newValue
+        }
       }
-    } finally {
-      setIsSubmitting(false)
+    })
+
+    if (Object.keys(changes).length === 0) {
+      setIsEditing(false)
+      return
     }
+
+    updateBooking(changes, {
+      onSuccess: () => {
+        setIsEditing(false)
+        onUpdate()
+      }
+    })
   }
 
   const handleCancel = async () => {
@@ -122,29 +102,11 @@ export function BookingDetail({ booking, canEdit, canCancel, onUpdate, onCancel 
       return
     }
 
-    setIsSubmitting(true)
-    try {
-      const url = booking.manage_token
-        ? `/v1/guest/bookings/${booking.id}?manage_token=${booking.manage_token}`
-        : `/v1/guest/bookings/${booking.id}`
-
-      await apiClient.delete(url)
-      showToast('Booking cancelled successfully', 'success')
-      onCancel()
-    } catch (error: any) {
-      const status = error.response?.status
-      const message = error.response?.data?.message || error.message
-      
-      if (status === 401) {
-        showToast('Session expired. Please log in again.', 'error')
-      } else if (status === 422) {
-        showToast(message, 'error')
-      } else {
-        showToast('Failed to cancel booking. Please try again.', 'error')
+    cancelBooking(undefined, {
+      onSuccess: () => {
+        onCancel()
       }
-    } finally {
-      setIsSubmitting(false)
-    }
+    })
   }
 
   if (isEditing) {
@@ -268,10 +230,10 @@ export function BookingDetail({ booking, canEdit, canCancel, onUpdate, onCancel 
 
           <button
             type="submit"
-            disabled={isSubmitting}
+            disabled={isUpdating}
             className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isSubmitting ? 'Updating...' : 'Update Booking'}
+            {isUpdating ? 'Updating...' : 'Update Booking'}
           </button>
         </form>
       </div>
@@ -342,10 +304,10 @@ export function BookingDetail({ booking, canEdit, canCancel, onUpdate, onCancel 
           {canCancel && (
             <button
               onClick={handleCancel}
-              disabled={isSubmitting}
+              disabled={isCancelling}
               className="flex-1 border border-red-300 text-red-600 py-2 px-4 rounded-md hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSubmitting ? 'Cancelling...' : 'Cancel Booking'}
+              {isCancelling ? 'Cancelling...' : 'Cancel Booking'}
             </button>
           )}
         </div>
