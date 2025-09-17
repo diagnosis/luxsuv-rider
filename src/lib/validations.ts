@@ -7,8 +7,11 @@ export const createBookingSchema = z.object({
   rider_phone: z.string().regex(/^\+?[\d\s\-()]+$/, 'Invalid phone format'),
   pickup: z.string().min(1, 'Pickup location is required'),
   dropoff: z.string().min(1, 'Dropoff location is required'),
-  scheduled_at: z.date().refine(
-    (date) => date > new Date(),
+  scheduled_at: z.string().min(1, 'Scheduled time is required').refine(
+    (val) => {
+      const date = new Date(val)
+      return !isNaN(date.getTime()) && date > new Date()
+    },
     'Scheduled time must be in the future'
   ),
   passengers: z.number().int().min(1, 'At least 1 passenger').max(8, 'Maximum 8 passengers'),

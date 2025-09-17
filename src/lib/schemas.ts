@@ -27,10 +27,10 @@ export const guestVerifySchema = z.object({
 const baseBookingSchema = z.object({
   pickup: z.string().min(1, 'Pickup location is required'),
   dropoff: z.string().min(1, 'Dropoff location is required'),
-  scheduled_at: z.string().refine(
+  scheduled_at: z.string().min(1, 'Scheduled time is required').refine(
     (val) => {
       const date = new Date(val)
-      return date > new Date()
+      return !isNaN(date.getTime()) && date > new Date()
     },
     'Scheduled time must be in the future'
   ),
